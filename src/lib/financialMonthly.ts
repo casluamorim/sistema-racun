@@ -130,3 +130,17 @@ export function expandOccurrencesForMonth<T extends RecurringItem>(items: T[], m
 export function expandOccurrencesForMonths<T extends RecurringItem>(items: T[], startMonth: Date, count: number) {
   return expandOccurrencesInRange(items, startOfMonth(startMonth), endOfMonth(addMonths(startMonth, count - 1)));
 }
+
+/**
+ * Remove os lançamentos-filhos de faturas de cartão (o valor já está na despesa-mãe
+ * "Cartão de Crédito"), igual ao Financeiro PJ/PF, para não somar duas vezes.
+ */
+export function withoutCardChildren<T extends { id: string; category?: string | null; parent_expense_id?: string | null }>(expenses: T[]): T[] {
+  const cardIds = new Set(expenses.filter(e => e.category === 'Cartão de Crédito' && !e.parent_expense_id).map(e => e.id));
+  return expenses.filter(e => !(e.parent_expense_id && cardIds.has(e.parent_expense_id)));
+}
+
+/** Ignora itens cancelados nos totais. */
+export function withoutCancelled<T extends { status: string }>(items: T[]): T[] {
+  return items.filter(i => i.status !== 'cancelled');
+}

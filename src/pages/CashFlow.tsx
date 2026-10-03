@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { format, addDays, startOfDay, endOfDay, parseISO, isBefore, isAfter, addMonths, isSameDay, differenceInDays, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { expandOccurrencesInRange } from '@/lib/financialMonthly';
+import { expandOccurrencesInRange , withoutCardChildren, withoutCancelled } from '@/lib/financialMonthly';
 import { useCachedState, hasPageCache } from '@/hooks/useCachedState';
 
 type FinType = 'all' | 'pj' | 'pf';
@@ -81,8 +81,8 @@ export default function CashFlow() {
       if (inv.error) throw inv.error;
       if (exp.error) throw exp.error;
       if (pi.error) throw pi.error;
-      setInvoices(inv.data || []);
-      setExpenses(exp.data || []);
+      setInvoices(withoutCancelled((inv.data || []) as any[]));
+      setExpenses(withoutCardChildren((exp.data || []) as any[]));
       setPersonalIncome(pi.data || []);
     } catch (e: any) {
       toast({ title: 'Erro ao carregar', description: e.message, variant: 'destructive' });

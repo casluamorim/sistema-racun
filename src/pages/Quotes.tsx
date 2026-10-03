@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { InlineEdit } from '@/components/InlineEdit';
 import { ClientCombobox, ComboClient } from '@/components/clients/ClientCombobox';
 import { useUrlState } from '@/hooks/usePersistedState';
-import { createProjectFromQuote, createInvoicesFromPlan, type CreatedProject } from '@/lib/quoteAutomation';
+import { createProjectFromQuote, createInvoicesFromPlan, createReceivableForProject, type CreatedProject } from '@/lib/quoteAutomation';
 import { buildInstallments, paymentPlanLabels, defaultInstallments, planSummary, type PaymentPlan } from '@/lib/paymentPlans';
 import { PaymentScheduleDialog } from '@/components/finance/ProjectPaymentDialogs';
 import {
