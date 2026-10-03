@@ -20,7 +20,7 @@ import {
 } from 'recharts';
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { expandOccurrencesForMonth } from '@/lib/financialMonthly';
+import { expandOccurrencesForMonth , withoutCardChildren, withoutCancelled } from '@/lib/financialMonthly';
 import { ClientNotificationsCard } from '@/components/dashboard/ClientNotificationsCard';
 import { useUrlState } from '@/hooks/usePersistedState';
 import { useCachedState, hasPageCache } from '@/hooks/useCachedState';
@@ -138,12 +138,12 @@ export default function Dashboard() {
     const [invAll, pfAll, expAll] = await Promise.all([
       supabase.from('invoices').select(`${recFields}, parent_invoice_id`),
       supabase.from('personal_income').select(`${recFields}, parent_income_id`),
-      supabase.from('expenses').select(`${recFields}, parent_expense_id`),
+      supabase.from('expenses').select(`${recFields}, parent_expense_id, category`),
     ]);
 
-    const invItems = (invAll.data ?? []) as any[];
+    const invItems = withoutCancelled((invAll.data ?? []) as any[]);
     const pfItems = (pfAll.data ?? []) as any[];
-    const expItems = (expAll.data ?? []) as any[];
+    const expItems = withoutCardChildren((expAll.data ?? []) as any[]);
 
     const invCurOcc = expandOccurrencesForMonth(invItems, now);
     const invPrevOcc = expandOccurrencesForMonth(invItems, prev);
@@ -173,7 +173,7 @@ export default function Dashboard() {
 
     const [inv, exp, pf] = await Promise.all([
       supabase.from('invoices').select('amount, paid_at').eq('status', 'paid').gte('paid_at', fromIso),
-      supabase.from('expenses').select('amount, due_date').gte('due_date', fromIso),
+      supabase.from('expenses').select('id, amount, due_date, category, parent_expense_id'),
       supabase.from('personal_income').select('amount, due_date').eq('status', 'paid').gte('due_date', fromIso),
     ]);
 
@@ -196,7 +196,7 @@ export default function Dashboard() {
       const b = buckets.find((b) => isSameDay(b._d, d));
       if (b) b.entrada += Number(r.amount || 0);
     });
-    (exp.data ?? []).forEach((r: any) => {
+    withoutCardChildren((exp.data ?? []) as any[]).filter((r: any) => r.due_date >= fromIso).forEach((r: any) => {
       if (!r.due_date) return;
       const d = new Date(r.due_date);
       const b = buckets.find((b) => isSameDay(b._d, d));
