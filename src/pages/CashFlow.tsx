@@ -124,7 +124,7 @@ export default function CashFlow() {
     list.push(...buildMovements(invoices as any, (it: any, dateISO, isProj, status) => ({
       date: dateISO,
       type: 'in',
-      amount: Number(it.amount) || 0,
+      amount: netRevenue(it.amount, it.tax_percent, costsByInvoice.get(it.id) ?? 0),
       label: it.title + (it.clients?.company ? ` — ${it.clients.company}` : it.clients?.name ? ` — ${it.clients.name}` : ''),
       category: 'Fatura',
       status,
