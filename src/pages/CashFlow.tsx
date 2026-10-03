@@ -1,3 +1,5 @@
+import { netRevenue } from '@/lib/netRevenue';
+import { sumCostsByInvoice } from '@/lib/invoiceCosts';
 import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,6 +70,7 @@ export default function CashFlow() {
     type: 'in' as 'in' | 'out', financial_type: 'pj' as 'pj' | 'pf'
   });
 
+  const [costsByInvoice, setCostsByInvoice] = useCachedState<Map<string, number>>('cashflow:costs', new Map());
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
@@ -78,6 +81,9 @@ export default function CashFlow() {
         supabase.from('expenses').select('*, clients(name, company), projects(name)').order('due_date'),
         supabase.from('personal_income').select('*').order('due_date'),
       ]);
+      const { data: costRows } = await supabase.from('invoice_costs').select('invoice_id, mode, value');
+      const amounts = new Map<string, number>((inv.data || []).map((i: any) => [i.id, Number(i.amount) || 0]));
+      setCostsByInvoice(sumCostsByInvoice((costRows || []) as any[], amounts));
       if (inv.error) throw inv.error;
       if (exp.error) throw exp.error;
       if (pi.error) throw pi.error;
@@ -118,7 +124,7 @@ export default function CashFlow() {
     list.push(...buildMovements(invoices as any, (it: any, dateISO, isProj, status) => ({
       date: dateISO,
       type: 'in',
-      amount: Number(it.amount) || 0,
+      amount: netRevenue(it.amount, it.tax_percent, costsByInvoice.get(it.id) ?? 0),
       label: it.title + (it.clients?.company ? ` — ${it.clients.company}` : it.clients?.name ? ` — ${it.clients.name}` : ''),
       category: 'Fatura',
       status,
@@ -144,7 +150,7 @@ export default function CashFlow() {
     list.push(...buildMovements(personalIncome as any, (it: any, dateISO, isProj, status) => ({
       date: dateISO,
       type: 'in',
-      amount: Number(it.amount) || 0,
+      amount: netRevenue(it.amount, it.tax_percent, 0),
       label: it.description + (it.category ? ` (${it.category})` : ''),
       category: it.category || 'Receita PF',
       status,
@@ -160,7 +166,7 @@ export default function CashFlow() {
     return list.filter(m =>
       finType === 'all' || m.financial_type === finType
     );
-  }, [invoices, expenses, personalIncome, simulations, finType, rangeStart, rangeEnd]);
+  }, [invoices, expenses, personalIncome, costsByInvoice, simulations, finType, rangeStart, rangeEnd]);
 
   // Build chart series day-by-day across window
   const chartData = useMemo(() => {
