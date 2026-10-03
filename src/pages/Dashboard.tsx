@@ -1,3 +1,5 @@
+import { netRevenue } from '@/lib/netRevenue';
+import { sumCostsByInvoice } from '@/lib/invoiceCosts';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +45,7 @@ interface OpsStats {
 interface FinStats {
   revenueMonth: number;
   revenuePrevMonth: number;
+  netRevenueMonth?: number;
   receivables: number;
   expensesMonth: number;
   expensesPrevMonth: number;
@@ -134,11 +137,12 @@ export default function Dashboard() {
     const prevEnd = endOfMonth(prev).toISOString().split('T')[0];
 
     // Puxa TODOS os itens (inclusive recorrentes/parents) e expande via mesma engine dos módulos Financeiro PJ/PF.
-    const recFields = 'id, due_date, amount, status, recurrence, recurrence_day, recurrence_end, is_recurring_active';
-    const [invAll, pfAll, expAll] = await Promise.all([
+    const recFields = 'id, due_date, amount, status, recurrence, recurrence_day, recurrence_end, is_recurring_active, tax_percent';
+    const [invAll, pfAll, expAll, costAll] = await Promise.all([
       supabase.from('invoices').select(`${recFields}, parent_invoice_id`),
       supabase.from('personal_income').select(`${recFields}, parent_income_id`),
-      supabase.from('expenses').select(`${recFields}, parent_expense_id, category`),
+      supabase.from('expenses').select('id, due_date, amount, status, recurrence, recurrence_day, recurrence_end, is_recurring_active, parent_expense_id, category'),
+      supabase.from('invoice_costs').select('invoice_id, mode, value'),
     ]);
 
     const invItems = withoutCancelled((invAll.data ?? []) as any[]);
@@ -156,7 +160,11 @@ export default function Dashboard() {
     const sumPending = (occs: any[]) => occs.filter(o => o.status !== 'paid').reduce((a, o) => a + Number(o.item.amount || 0), 0);
     const sumAll = (occs: any[]) => occs.reduce((a, o) => a + Number(o.item.amount || 0), 0);
 
+    const costMap = sumCostsByInvoice((costAll.data ?? []) as any[], new Map(invItems.map((i: any) => [i.id, Number(i.amount) || 0])));
+    const sumNet = (occs: any[], withCosts: boolean) => occs.filter(o => o.status === 'paid')
+      .reduce((a, o) => a + netRevenue(o.item.amount, o.item.tax_percent, withCosts ? (costMap.get(o.item.id) ?? 0) : 0), 0);
     setFin({
+      netRevenueMonth: sumNet(invCurOcc, true) + sumNet(pfCurOcc, false),
       revenueMonth: sumPaid(invCurOcc) + sumPaid(pfCurOcc),
       revenuePrevMonth: sumPaid(invPrevOcc) + sumPaid(pfPrevOcc),
       receivables: sumPending(invCurOcc) + sumPending(pfCurOcc),
@@ -425,6 +433,7 @@ export default function Dashboard() {
             value={BRL(fin.revenueMonth)}
             delta={revDelta}
             deltaLabel="vs mês anterior (PJ + PF)"
+            footnote={`Líquido: ${BRL(fin.netRevenueMonth ?? 0)} (após impostos e custos)`}
             icon={Wallet}
             accent="from-emerald-500/20 to-emerald-500/0"
             iconColor="text-emerald-400"
@@ -700,9 +709,9 @@ export default function Dashboard() {
 /* ---------------- Subcomponents ---------------- */
 
 function FinanceCard({
-  label, value, subtitle, delta, deltaLabel, invertDelta, icon: Icon, accent, iconColor, highlight,
+  label, value, subtitle, footnote, delta, deltaLabel, invertDelta, icon: Icon, accent, iconColor, highlight,
 }: {
-  label: string; value: string; subtitle?: string;
+  label: string; value: string; subtitle?: string; footnote?: string;
   delta?: number; deltaLabel?: string; invertDelta?: boolean;
   icon: any; accent: string; iconColor: string; highlight?: boolean;
 }) {
@@ -721,6 +730,7 @@ function FinanceCard({
         <div className={`mt-3 font-display text-3xl font-bold tracking-tight ${highlight ? 'text-emerald-400' : 'text-foreground'}`}>
           {value}
         </div>
+        {footnote && <div className="mt-1 text-sm font-medium text-emerald-400">{footnote}</div>}
         <div className="mt-2 flex items-center gap-2 text-xs">
           {hasDelta ? (
             <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium ${positive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>

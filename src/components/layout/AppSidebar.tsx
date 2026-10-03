@@ -47,6 +47,7 @@ const sections: NavSection[] = [
       { icon: Wallet, label: 'Financeiro PJ', path: '/financial' },
       { icon: User, label: 'Financeiro PF', path: '/financial/personal' },
       { icon: TrendingUp, label: 'Fluxo de Caixa', path: '/cashflow' },
+      { icon: Sparkles, label: 'Assistente financeiro', path: '/assistente' },
     ],
   },
   {
