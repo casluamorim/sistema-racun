@@ -78,7 +78,8 @@ export default function CashFlow() {
     try {
       const [inv, exp, pi] = await Promise.all([
         supabase.from('invoices').select('*, clients(name, company)').order('due_date'),
-        supabase.from('expenses').select('*, clients(name, company), projects(name)').order('due_date'),
+        // Custos de fatura já saem das entradas (líquido); não repetir nas saídas
+        supabase.from('expenses').select('*, clients(name, company), projects(name)').is('invoice_cost_id', null).order('due_date'),
         supabase.from('personal_income').select('*').order('due_date'),
       ]);
       const { data: costRows } = await supabase.from('invoice_costs').select('invoice_id, mode, value');

@@ -77,7 +77,7 @@ export async function buildFinanceContext(monthsBack = 12, monthsAhead = 6) {
     else { a.pj_despesas += amt; if (o.status === 'paid') a.pj_despesas_pagas += amt; }
     const ck = `${pf ? 'PF' : 'PJ'} · ${e.category || 'Sem categoria'}`;
     const m = byCategory.get(o.competence) ?? new Map(); m.set(ck, (m.get(ck) ?? 0) + amt); byCategory.set(o.competence, m);
-    if (inDetail(o.competence)) items.push({ tipo: pf ? 'despesa_pf' : 'despesa_pj', mes: o.competence, venc: o.occurrence_date, descricao: e.description, categoria: e.category, valor: amt, status: o.status, vinculada_a_receita: !!(e.linked_invoice_id || e.linked_income_id) });
+    if (inDetail(o.competence)) items.push({ tipo: pf ? 'despesa_pf' : 'despesa_pj', mes: o.competence, venc: o.occurrence_date, descricao: e.description, categoria: e.category, valor: amt, status: o.status, vinculada_a_receita: !!(e.linked_invoice_id || e.linked_income_id), custo_de_fatura: !!e.invoice_cost_id });
   }
 
   for (const o of expandOccurrencesInRange(incomes, start, end)) {
