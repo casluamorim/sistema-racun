@@ -74,6 +74,7 @@ export async function buildFinanceContext(monthsBack = 12, monthsAhead = 6) {
     const amt = Number(e.amount) || 0;
     const pf = e.financial_type === 'pf';
     if (pf) { a.pf_despesas += amt; if (o.status === 'paid') a.pf_despesas_pagas += amt; }
+    else if (e.invoice_cost_id) { a.pj_custos_a_pagar += o.status === 'paid' ? 0 : amt; }
     else { a.pj_despesas += amt; if (o.status === 'paid') a.pj_despesas_pagas += amt; }
     const ck = `${pf ? 'PF' : 'PJ'} · ${e.category || 'Sem categoria'}`;
     const m = byCategory.get(o.competence) ?? new Map(); m.set(ck, (m.get(ck) ?? 0) + amt); byCategory.set(o.competence, m);
