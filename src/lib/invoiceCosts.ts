@@ -61,7 +61,7 @@ export async function saveInvoiceCosts(invoiceId: string, costs: InvoiceCost[], 
   }
 
   const { data: inv } = await supabase.from('invoices')
-    .select('title, amount, due_date, client_id, project_id').eq('id', invoiceId).single();
+    .select('title, amount, due_date, client_id, project_id, recurrence, recurrence_day, recurrence_end, is_recurring_active').eq('id', invoiceId).single();
   const gross = Number((inv as any)?.amount) || 0;
 
   for (const c of clean) {
@@ -83,15 +83,21 @@ export async function saveInvoiceCosts(invoiceId: string, costs: InvoiceCost[], 
     // Despesa espelhada (preserva status/data já definidos pelo usuário)
     const amount = Math.round(costAmount(c, gross) * 100) / 100;
     const description = `${c.description.trim()} — ${(inv as any)?.title ?? 'fatura'}`;
+    const rec = {
+      recurrence: (inv as any)?.recurrence ?? 'one_time',
+      recurrence_day: (inv as any)?.recurrence_day ?? null,
+      recurrence_end: (inv as any)?.recurrence_end ?? null,
+      is_recurring_active: (inv as any)?.is_recurring_active ?? true,
+    };
     const { data: exp } = await supabase.from('expenses').select('id').eq('invoice_cost_id', costId!).maybeSingle();
     if (exp) {
-      const { error } = await supabase.from('expenses').update({ description, amount, category: costKindLabels[c.kind] } as any).eq('id', (exp as any).id);
+      const { error } = await supabase.from('expenses').update({ description, amount, category: costKindLabels[c.kind], ...rec } as any).eq('id', (exp as any).id);
       if (error) return { error };
     } else {
       const { error } = await supabase.from('expenses').insert({
         description, amount, category: costKindLabels[c.kind], financial_type: 'pj',
         due_date: (inv as any)?.due_date ?? new Date().toISOString().slice(0, 10),
-        status: 'pending', recurrence: 'one_time',
+        status: 'pending', ...rec,
         client_id: (inv as any)?.client_id ?? null, project_id: (inv as any)?.project_id ?? null,
         linked_invoice_id: invoiceId, invoice_cost_id: costId, created_by: userId ?? null,
       } as any);
