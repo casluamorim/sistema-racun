@@ -13,12 +13,12 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 
 type MonthAgg = {
   pj_bruto: number; pj_imposto: number; pj_custos_fatura: number; pj_recebido: number;
-  pj_despesas: number; pj_despesas_pagas: number;
+  pj_despesas: number; pj_despesas_pagas: number; pj_custos_a_pagar: number;
   pf_receitas: number; pf_imposto: number; pf_recebido: number;
   pf_despesas: number; pf_despesas_pagas: number;
 };
 const emptyAgg = (): MonthAgg => ({
-  pj_bruto: 0, pj_imposto: 0, pj_custos_fatura: 0, pj_recebido: 0, pj_despesas: 0, pj_despesas_pagas: 0,
+  pj_bruto: 0, pj_imposto: 0, pj_custos_fatura: 0, pj_recebido: 0, pj_despesas: 0, pj_despesas_pagas: 0, pj_custos_a_pagar: 0,
   pf_receitas: 0, pf_imposto: 0, pf_recebido: 0, pf_despesas: 0, pf_despesas_pagas: 0,
 });
 
