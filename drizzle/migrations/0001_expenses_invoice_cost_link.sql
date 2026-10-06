@@ -1,0 +1,2 @@
+ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS invoice_cost_id uuid REFERENCES public.invoice_costs(id) ON DELETE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS expenses_invoice_cost_id_key ON public.expenses(invoice_cost_id) WHERE invoice_cost_id IS NOT NULL;

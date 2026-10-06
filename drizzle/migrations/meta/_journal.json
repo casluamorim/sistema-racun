@@ -8,6 +8,13 @@
       "when": 1791242531793,
       "tag": "0000_finance_assistant_threads",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791252662905,
+      "tag": "0001_expenses_invoice_cost_link",
+      "breakpoints": true
     }
   ]
 }

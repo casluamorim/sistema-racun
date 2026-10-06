@@ -779,6 +779,7 @@ export type Database = {
           due_date: string
           financial_type: Database["public"]["Enums"]["financial_type"]
           id: string
+          invoice_cost_id: string | null
           is_recurring_active: boolean
           linked_income_id: string | null
           linked_invoice_id: string | null
@@ -802,6 +803,7 @@ export type Database = {
           due_date: string
           financial_type?: Database["public"]["Enums"]["financial_type"]
           id?: string
+          invoice_cost_id?: string | null
           is_recurring_active?: boolean
           linked_income_id?: string | null
           linked_invoice_id?: string | null
@@ -825,6 +827,7 @@ export type Database = {
           due_date?: string
           financial_type?: Database["public"]["Enums"]["financial_type"]
           id?: string
+          invoice_cost_id?: string | null
           is_recurring_active?: boolean
           linked_income_id?: string | null
           linked_invoice_id?: string | null
@@ -843,6 +846,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_invoice_cost_id_fkey"
+            columns: ["invoice_cost_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_costs"
             referencedColumns: ["id"]
           },
           {

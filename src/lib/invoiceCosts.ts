@@ -46,23 +46,59 @@ export function sumCostsByInvoice(
   return map;
 }
 
-/** Substitui todos os custos de uma fatura pelos informados. */
+/**
+ * Salva os custos de uma fatura (mantendo os já existentes pelo id) e mantém
+ * uma despesa PJ espelhada para cada custo, para controlar o pagamento na aba Despesas.
+ */
 export async function saveInvoiceCosts(invoiceId: string, costs: InvoiceCost[], userId?: string) {
   const clean = costs.filter(c => c.description.trim() && Number(c.value) > 0);
-  const { error: delErr } = await supabase.from('invoice_costs').delete().eq('invoice_id', invoiceId);
-  if (delErr) return { error: delErr };
-  if (!clean.length) return { error: null };
-  const { error } = await supabase.from('invoice_costs').insert(
-    clean.map(c => ({
-      invoice_id: invoiceId,
-      description: c.description.trim(),
-      kind: c.kind,
-      mode: c.mode,
+  const { data: existing } = await supabase.from('invoice_costs').select('id').eq('invoice_id', invoiceId);
+  const keepIds = new Set(clean.filter(c => c.id).map(c => c.id!));
+  const toDelete = ((existing as any[]) ?? []).map(e => e.id).filter(id => !keepIds.has(id));
+  if (toDelete.length) {
+    const { error } = await supabase.from('invoice_costs').delete().in('id', toDelete);
+    if (error) return { error };
+  }
+
+  const { data: inv } = await supabase.from('invoices')
+    .select('title, amount, due_date, client_id, project_id').eq('id', invoiceId).single();
+  const gross = Number((inv as any)?.amount) || 0;
+
+  for (const c of clean) {
+    const row = {
+      invoice_id: invoiceId, description: c.description.trim(), kind: c.kind, mode: c.mode,
       value: Number(c.value) || 0,
-      created_by: userId ?? null,
-    })) as any,
-  );
-  return { error };
+    };
+    let costId = c.id;
+    if (costId) {
+      const { error } = await supabase.from('invoice_costs').update(row as any).eq('id', costId);
+      if (error) return { error };
+    } else {
+      const { data, error } = await supabase.from('invoice_costs')
+        .insert({ ...row, created_by: userId ?? null } as any).select('id').single();
+      if (error) return { error };
+      costId = (data as any).id;
+    }
+
+    // Despesa espelhada (preserva status/data já definidos pelo usuário)
+    const amount = Math.round(costAmount(c, gross) * 100) / 100;
+    const description = `${c.description.trim()} — ${(inv as any)?.title ?? 'fatura'}`;
+    const { data: exp } = await supabase.from('expenses').select('id').eq('invoice_cost_id', costId!).maybeSingle();
+    if (exp) {
+      const { error } = await supabase.from('expenses').update({ description, amount, category: costKindLabels[c.kind] } as any).eq('id', (exp as any).id);
+      if (error) return { error };
+    } else {
+      const { error } = await supabase.from('expenses').insert({
+        description, amount, category: costKindLabels[c.kind], financial_type: 'pj',
+        due_date: (inv as any)?.due_date ?? new Date().toISOString().slice(0, 10),
+        status: 'pending', recurrence: 'one_time',
+        client_id: (inv as any)?.client_id ?? null, project_id: (inv as any)?.project_id ?? null,
+        linked_invoice_id: invoiceId, invoice_cost_id: costId, created_by: userId ?? null,
+      } as any);
+      if (error) return { error };
+    }
+  }
+  return { error: null };
 }
 
 export async function loadInvoiceCosts(invoiceId: string): Promise<InvoiceCost[]> {

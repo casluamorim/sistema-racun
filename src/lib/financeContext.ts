@@ -13,12 +13,12 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 
 type MonthAgg = {
   pj_bruto: number; pj_imposto: number; pj_custos_fatura: number; pj_recebido: number;
-  pj_despesas: number; pj_despesas_pagas: number;
+  pj_despesas: number; pj_despesas_pagas: number; pj_custos_a_pagar: number;
   pf_receitas: number; pf_imposto: number; pf_recebido: number;
   pf_despesas: number; pf_despesas_pagas: number;
 };
 const emptyAgg = (): MonthAgg => ({
-  pj_bruto: 0, pj_imposto: 0, pj_custos_fatura: 0, pj_recebido: 0, pj_despesas: 0, pj_despesas_pagas: 0,
+  pj_bruto: 0, pj_imposto: 0, pj_custos_fatura: 0, pj_recebido: 0, pj_despesas: 0, pj_despesas_pagas: 0, pj_custos_a_pagar: 0,
   pf_receitas: 0, pf_imposto: 0, pf_recebido: 0, pf_despesas: 0, pf_despesas_pagas: 0,
 });
 
@@ -74,10 +74,11 @@ export async function buildFinanceContext(monthsBack = 12, monthsAhead = 6) {
     const amt = Number(e.amount) || 0;
     const pf = e.financial_type === 'pf';
     if (pf) { a.pf_despesas += amt; if (o.status === 'paid') a.pf_despesas_pagas += amt; }
+    else if (e.invoice_cost_id) { a.pj_custos_a_pagar += o.status === 'paid' ? 0 : amt; }
     else { a.pj_despesas += amt; if (o.status === 'paid') a.pj_despesas_pagas += amt; }
     const ck = `${pf ? 'PF' : 'PJ'} · ${e.category || 'Sem categoria'}`;
     const m = byCategory.get(o.competence) ?? new Map(); m.set(ck, (m.get(ck) ?? 0) + amt); byCategory.set(o.competence, m);
-    if (inDetail(o.competence)) items.push({ tipo: pf ? 'despesa_pf' : 'despesa_pj', mes: o.competence, venc: o.occurrence_date, descricao: e.description, categoria: e.category, valor: amt, status: o.status, vinculada_a_receita: !!(e.linked_invoice_id || e.linked_income_id) });
+    if (inDetail(o.competence)) items.push({ tipo: pf ? 'despesa_pf' : 'despesa_pj', mes: o.competence, venc: o.occurrence_date, descricao: e.description, categoria: e.category, valor: amt, status: o.status, vinculada_a_receita: !!(e.linked_invoice_id || e.linked_income_id), custo_de_fatura: !!e.invoice_cost_id });
   }
 
   for (const o of expandOccurrencesInRange(incomes, start, end)) {
