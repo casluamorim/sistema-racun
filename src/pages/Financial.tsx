@@ -553,8 +553,9 @@ export default function Financial() {
   };
 
   /** Despesas vinculadas a cada receita (fatura PJ). */
+  // Despesas geradas a partir dos custos da fatura já entram em costsByInvoice
   const linkedByInvoice = useMemo(
-    () => sumLinkedExpenses(expenses as any[], 'linked_invoice_id'),
+    () => sumLinkedExpenses((expenses as any[]).filter(e => !e.invoice_cost_id), 'linked_invoice_id'),
     [expenses]
   );
 
@@ -587,7 +588,8 @@ export default function Financial() {
     const receitaPrevista = recebido + pendente + atrasado;
     const despesaPrevista = despPagas + despPrev;
     const lucroPrevisto = receitaPrevista - despesaPrevista;
-    const lucroLiquido = lucroPrevisto - impostos - custosFatura;
+    // Custos das faturas já estão nas despesas (cada custo vira uma despesa a pagar)
+    const lucroLiquido = lucroPrevisto - impostos;
     return {
       recebido, pendente, atrasado, despPagas, despPrev, custosFatura,
       receitaPrevista, despesaPrevista, lucroPrevisto, impostos, lucroLiquido,
