@@ -933,6 +933,7 @@ export default function Financial() {
                                 )}
                                 {exp.linked_invoice_id && (
                                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                                    {(exp as any).invoice_cost_id ? 'Custo da fatura: ' : ''}
                                     {(pjInvoices as any[]).find(i => i.id === exp.linked_invoice_id)?.title ?? 'Vinculada'}
                                   </Badge>
                                 )}
