@@ -440,9 +440,12 @@ export default function FinancialPersonal() {
   return (
     <AppLayout>
       <div className="animate-fade-in space-y-6">
-        <div>
-          <h1 className="page-title">Financeiro PF</h1>
-          <p className="text-muted-foreground">Receitas e despesas pessoais — gestão por competência mensal</p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="page-title">Financeiro PF</h1>
+            <p className="text-muted-foreground">Receitas e despesas pessoais — gestão por competência mensal</p>
+          </div>
+          <ReceiptScanDialog financialType="pf" onSaved={loadData} />
         </div>
 
         <MonthNavigator

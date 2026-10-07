@@ -27,7 +27,7 @@ export function AssistantBar() {
   };
 
   return (
-    <form onSubmit={submit} className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 focus-within:border-primary">
+    <form onSubmit={submit} className="mr-14 flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 focus-within:border-primary">
       <Sparkles className="h-4 w-4 shrink-0 text-primary" />
       <input
         value={text}
