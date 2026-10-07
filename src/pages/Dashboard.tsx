@@ -24,6 +24,7 @@ import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay
 import { ptBR } from 'date-fns/locale';
 import { expandOccurrencesForMonth , withoutCardChildren, withoutCancelled } from '@/lib/financialMonthly';
 import { ClientNotificationsCard } from '@/components/dashboard/ClientNotificationsCard';
+import { AssistantBar } from '@/components/dashboard/AssistantBar';
 import { useUrlState } from '@/hooks/usePersistedState';
 import { useCachedState, hasPageCache } from '@/hooks/useCachedState';
 
@@ -406,6 +407,7 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="animate-fade-in space-y-8">
+        <AssistantBar />
         {/* Header */}
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>

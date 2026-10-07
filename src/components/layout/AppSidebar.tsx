@@ -15,6 +15,7 @@ import {
   Menu,
   ListChecks,
   Bell,
+  Sparkles,
 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,7 @@ const sections: NavSection[] = [
       { icon: FileCheck, label: 'Aprovações', path: '/contents' },
       { icon: FileText, label: 'Propostas', path: '/quotes' },
       { icon: Bell, label: 'Notificações', path: '/notifications' },
+      { icon: Sparkles, label: 'Assistente', path: '/assistente' },
 
     ],
   },
