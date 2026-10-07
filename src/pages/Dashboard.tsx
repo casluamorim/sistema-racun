@@ -25,6 +25,7 @@ import { ptBR } from 'date-fns/locale';
 import { expandOccurrencesForMonth , withoutCardChildren, withoutCancelled } from '@/lib/financialMonthly';
 import { ClientNotificationsCard } from '@/components/dashboard/ClientNotificationsCard';
 import { AssistantBar } from '@/components/dashboard/AssistantBar';
+import { AgencyCalendarCard } from '@/components/dashboard/AgencyCalendarCard';
 import { useUrlState } from '@/hooks/usePersistedState';
 import { useCachedState, hasPageCache } from '@/hooks/useCachedState';
 

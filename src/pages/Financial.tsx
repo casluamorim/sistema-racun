@@ -636,6 +636,7 @@ export default function Financial() {
             <h1 className="page-title">Financeiro PJ</h1>
             <p className="text-muted-foreground">Faturas, custos, despesas e cobranças</p>
           </div>
+          <ReceiptScanDialog financialType="pj" onSaved={loadData} />
         </div>
 
         {/* Month navigator */}
