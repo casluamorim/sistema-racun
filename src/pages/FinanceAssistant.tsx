@@ -166,6 +166,16 @@ function ChatInner({ threadId, initial, input, setInput, ctxRef, onActivity }: {
     setTimeout(onActivity, 1500);
   };
 
+  // Pergunta enviada pela caixa do Painel
+  useEffect(() => {
+    const pending = sessionStorage.getItem('assistant_pending_question');
+    if (pending && !initial.length) {
+      sessionStorage.removeItem('assistant_pending_question');
+      send(pending);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <Conversation className="flex-1">
@@ -197,6 +207,16 @@ function ChatInner({ threadId, initial, input, setInput, ctxRef, onActivity }: {
                       <ReasoningContent>{p.text}</ReasoningContent>
                     </Reasoning>
                   );
+                  if (p.type.startsWith('tool-')) {
+                    const t = p as any;
+                    const done = t.state === 'output-available';
+                    const failed = t.state === 'output-error' || t.output?.error;
+                    return (
+                      <div key={i} className={cn('my-1 rounded-md border px-3 py-2 text-xs', failed ? 'border-destructive text-destructive' : 'border-border text-muted-foreground')}>
+                        {failed ? `Falhou: ${t.output?.error ?? t.errorText ?? ''}` : done ? `✓ ${t.output?.message ?? 'Feito'}` : 'Executando ação...'}
+                      </div>
+                    );
+                  }
                   return null;
                 })}
               </MessageContent>

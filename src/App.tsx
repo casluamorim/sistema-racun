@@ -23,6 +23,7 @@ const loaders = {
   tags: () => import('./pages/TagsPage'),
   activity: () => import('./pages/ActivityPage'),
   notifications: () => import('./pages/Notifications'),
+  assistant: () => import('./pages/FinanceAssistant'),
 };
 
 const Dashboard = lazy(loaders.dashboard);
@@ -40,6 +41,7 @@ const Contents = lazy(loaders.contents);
 const TagsPage = lazy(loaders.tags);
 const ActivityPage = lazy(loaders.activity);
 const NotificationsPage = lazy(loaders.notifications);
+const FinanceAssistant = lazy(loaders.assistant);
 
 const ClientPortal = lazy(() => import('./pages/ClientPortal'));
 const AcceptInvite = lazy(() => import('./pages/AcceptInvite'));
@@ -124,6 +126,8 @@ function AppRoutes() {
         <Route path="/tags" element={<TagsPage />} />
         <Route path="/activity" element={<ActivityPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/assistente" element={<FinanceAssistant />} />
+        <Route path="/assistente/:threadId" element={<FinanceAssistant />} />
 
         <Route path="/financial" element={<Financial />} />
         <Route path="/financial/personal" element={<FinancialPersonal />} />
