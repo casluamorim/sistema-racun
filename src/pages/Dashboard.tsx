@@ -556,6 +556,7 @@ export default function Dashboard() {
         {/* Atividade dos clientes (aprovações, pedidos de alteração, comentários) */}
         <section>
           <ClientNotificationsCard />
+          <AgencyCalendarCard />
         </section>
 
 
