@@ -1,3 +1,4 @@
+import { ReceiptScanDialog } from '@/components/financial/ReceiptScanDialog';
 import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
