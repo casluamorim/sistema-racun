@@ -15,12 +15,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Building2, Key, MessageSquare, FileText, User as UserIcon,
-  Upload, Save, Loader2, Copy, Eye, EyeOff, Users as UsersIcon, Tags as TagsIcon, LayoutTemplate,
+  Upload, Save, Loader2, Copy, Eye, EyeOff, Users as UsersIcon, Tags as TagsIcon, LayoutTemplate, CalendarDays, Workflow,
 } from 'lucide-react';
 import { UsersManagement } from '@/components/settings/UsersManagement';
 import { TagsManager } from '@/components/settings/TagsManager';
 import { TemplatesManager } from '@/components/settings/TemplatesManager';
 import { FlowPresetsManager } from '@/components/settings/FlowPresetsManager';
+import { calendarEmbedUrl } from '@/lib/calendar';
 
 interface AgencySettings {
   id: string;
@@ -45,6 +46,7 @@ interface AgencySettings {
   asaas_account_1_cnpj?: string | null;
   asaas_account_2_label?: string | null;
   asaas_account_2_cnpj?: string | null;
+  google_calendar_url?: string | null;
 }
 
 interface Profile {
@@ -311,21 +313,21 @@ export default function Settings() {
           </TabsContent>
 
           {/* TEMPLATES */}
-          <TabsContent value="templates" className="mt-6">
+          <TabsContent value="templates" >
             <TemplatesManager isAdmin={isAdmin} />
           </TabsContent>
 
           {/* USUÁRIOS */}
-          <TabsContent value="flows" className="mt-6">
+          <TabsContent value="flows" >
             <FlowPresetsManager isAdmin={isAdmin} />
           </TabsContent>
 
-          <TabsContent value="users" className="mt-6">
+          <TabsContent value="users" >
             <UsersManagement isAdmin={isAdmin} />
           </TabsContent>
 
           {/* AGÊNCIA */}
-          <TabsContent value="agency" className="mt-6">
+          <TabsContent value="agency" >
             <Card>
               <CardHeader>
                 <CardTitle>Dados da agência</CardTitle>
@@ -381,7 +383,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* PAGAMENTOS */}
-          <TabsContent value="payments" className="mt-6 space-y-6">
+          <TabsContent value="payments" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Asaas — contas de cobrança (2 CNPJs)</CardTitle>
@@ -500,7 +502,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* WHATSAPP */}
-          <TabsContent value="whatsapp" className="mt-6">
+          <TabsContent value="whatsapp" >
             <Card>
               <CardHeader>
                 <CardTitle>Modelo de mensagem WhatsApp</CardTitle>
@@ -534,7 +536,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* PADRÕES */}
-          <TabsContent value="defaults" className="mt-6">
+          <TabsContent value="defaults" >
             <Card>
               <CardHeader>
                 <CardTitle>Padrões operacionais</CardTitle>
@@ -636,7 +638,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* PERFIL */}
-          <TabsContent value="profile" className="mt-6">
+          <TabsContent value="profile" >
             <Card>
               <CardHeader>
                 <CardTitle>Meu perfil</CardTitle>
@@ -691,6 +693,7 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+          </div>
         </Tabs>
       </div>
     </AppLayout>
