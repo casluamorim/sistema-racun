@@ -1801,6 +1801,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_portal_actor: { Args: never; Returns: boolean }
       mark_user_invite_accepted: {
         Args: { _accepted_by: string; _token: string }
         Returns: undefined
