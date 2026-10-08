@@ -62,6 +62,7 @@ export type Database = {
           default_pix_key: string | null
           default_pix_key_type: string | null
           default_revision_limit: number
+          google_calendar_url: string | null
           id: string
           invoice_prefix: string
           next_invoice_number: number
@@ -91,6 +92,7 @@ export type Database = {
           default_pix_key?: string | null
           default_pix_key_type?: string | null
           default_revision_limit?: number
+          google_calendar_url?: string | null
           id?: string
           invoice_prefix?: string
           next_invoice_number?: number
@@ -120,6 +122,7 @@ export type Database = {
           default_pix_key?: string | null
           default_pix_key_type?: string | null
           default_revision_limit?: number
+          google_calendar_url?: string | null
           id?: string
           invoice_prefix?: string
           next_invoice_number?: number
