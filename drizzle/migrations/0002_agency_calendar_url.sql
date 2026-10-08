@@ -1,0 +1,1 @@
+ALTER TABLE public.agency_settings ADD COLUMN IF NOT EXISTS google_calendar_url text;

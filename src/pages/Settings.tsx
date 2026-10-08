@@ -15,12 +15,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Building2, Key, MessageSquare, FileText, User as UserIcon,
-  Upload, Save, Loader2, Copy, Eye, EyeOff, Users as UsersIcon, Tags as TagsIcon, LayoutTemplate,
+  Upload, Save, Loader2, Copy, Eye, EyeOff, Users as UsersIcon, Tags as TagsIcon, LayoutTemplate, CalendarDays, Workflow,
 } from 'lucide-react';
 import { UsersManagement } from '@/components/settings/UsersManagement';
 import { TagsManager } from '@/components/settings/TagsManager';
 import { TemplatesManager } from '@/components/settings/TemplatesManager';
 import { FlowPresetsManager } from '@/components/settings/FlowPresetsManager';
+import { calendarEmbedUrl } from '@/lib/calendar';
 
 interface AgencySettings {
   id: string;
@@ -45,6 +46,7 @@ interface AgencySettings {
   asaas_account_1_cnpj?: string | null;
   asaas_account_2_label?: string | null;
   asaas_account_2_cnpj?: string | null;
+  google_calendar_url?: string | null;
 }
 
 interface Profile {
@@ -220,73 +222,112 @@ export default function Settings() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 max-w-4xl">
-        <div className="flex items-center justify-between">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border/60 pb-5">
           <div>
             <h1 className="page-title">Configurações</h1>
-            <p className="text-muted-foreground">Personalize o Racun OS para a sua agência</p>
+            <p className="text-sm text-muted-foreground">Personalize o Racun OS para a sua agência</p>
           </div>
           {!isAdmin && (
-            <Badge variant="outline" className="text-amber-500 border-amber-500/50">
+            <Badge variant="outline" className="border-amber-500/50 text-amber-500">
               Modo somente leitura — apenas admins editam
             </Badge>
           )}
         </div>
 
-        <Tabs defaultValue="agency">
-          <div className="-mx-4 md:mx-0 px-4 md:px-0 overflow-x-auto">
-            <TabsList className="inline-flex w-max md:grid md:w-full md:grid-cols-8 gap-1">
-              <TabsTrigger value="agency" className="whitespace-nowrap">
-                <Building2 className="mr-2 h-4 w-4" />Agência
-              </TabsTrigger>
-              <TabsTrigger value="payments" className="whitespace-nowrap">
-                <Key className="mr-2 h-4 w-4" />Pagamentos
-              </TabsTrigger>
-              <TabsTrigger value="whatsapp" className="whitespace-nowrap">
-                <MessageSquare className="mr-2 h-4 w-4" />WhatsApp
-              </TabsTrigger>
-              <TabsTrigger value="defaults" className="whitespace-nowrap">
-                <FileText className="mr-2 h-4 w-4" />Padrões
-              </TabsTrigger>
-              <TabsTrigger value="tags" className="whitespace-nowrap">
-                <TagsIcon className="mr-2 h-4 w-4" />Tags
-              </TabsTrigger>
-              <TabsTrigger value="templates" className="whitespace-nowrap">
-                <LayoutTemplate className="mr-2 h-4 w-4" />Templates
-              </TabsTrigger>
-              <TabsTrigger value="flows" className="whitespace-nowrap">
-                Fluxos
-              </TabsTrigger>
-              <TabsTrigger value="users" className="whitespace-nowrap">
-                <UsersIcon className="mr-2 h-4 w-4" />Usuários
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="whitespace-nowrap">
-                <UserIcon className="mr-2 h-4 w-4" />Perfil
-              </TabsTrigger>
+        <Tabs defaultValue="agency" orientation="vertical" className="flex flex-col gap-6 md:flex-row">
+          <aside className="md:w-56 md:shrink-0">
+            <TabsList className="flex h-auto w-full gap-1 overflow-x-auto bg-transparent p-0 md:sticky md:top-4 md:flex-col md:items-stretch">
+              {([
+                ['Agência', [
+                  ['agency', Building2, 'Dados da agência'],
+                  ['payments', Key, 'Pagamentos'],
+                  ['whatsapp', MessageSquare, 'WhatsApp'],
+                  ['calendar', CalendarDays, 'Agenda'],
+                ]],
+                ['Operação', [
+                  ['defaults', FileText, 'Padrões'],
+                  ['tags', TagsIcon, 'Tags'],
+                  ['templates', LayoutTemplate, 'Templates'],
+                  ['flows', Workflow, 'Fluxos'],
+                ]],
+                ['Pessoas', [
+                  ['users', UsersIcon, 'Usuários'],
+                  ['profile', UserIcon, 'Meu perfil'],
+                ]],
+              ] as const).map(([group, items]) => (
+                <div key={group} className="contents md:block md:pb-3">
+                  <p className="hidden px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground md:block">{group}</p>
+                  {items.map(([value, Icon, label]) => (
+                    <TabsTrigger
+                      key={value}
+                      value={value}
+                      className="justify-start gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none md:w-full"
+                    >
+                      <Icon className="h-4 w-4" />{label}
+                    </TabsTrigger>
+                  ))}
+                </div>
+              ))}
             </TabsList>
-          </div>
+          </aside>
+          <div className="min-w-0 flex-1 [&>[role=tabpanel]]:mt-0">
+
+          {/* AGENDA */}
+          <TabsContent value="calendar">
+            <Card>
+              <CardHeader>
+                <CardTitle>Google Agenda da agência</CardTitle>
+                <CardDescription>Cole o link compartilhável da agenda para exibir os próximos eventos no Painel.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label>Link compartilhável</Label>
+                  <Input
+                    value={settings.google_calendar_url || ''}
+                    onChange={e => update('google_calendar_url', e.target.value)}
+                    disabled={!isAdmin}
+                    placeholder="https://calendar.google.com/calendar/embed?src=..."
+                  />
+                </div>
+                <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground space-y-1">
+                  <p className="font-medium text-foreground">Como pegar o link</p>
+                  <p>1. No Google Agenda (computador), abra as configurações da agenda da agência.</p>
+                  <p>2. Em "Permissões de acesso", marque "Disponibilizar publicamente" (ou deixe compartilhada com quem usa o sistema).</p>
+                  <p>3. Em "Integrar agenda", copie o "URL público" ou o ID da agenda e cole aqui.</p>
+                </div>
+                {settings.google_calendar_url && calendarEmbedUrl(settings.google_calendar_url) && (
+                  <iframe title="Prévia da agenda" src={calendarEmbedUrl(settings.google_calendar_url)!} className="h-80 w-full rounded-md border border-border" />
+                )}
+                <Button onClick={saveSettings} disabled={saving || !isAdmin}>
+                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Salvar
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* TAGS */}
-          <TabsContent value="tags" className="mt-6">
+          <TabsContent value="tags">
             <TagsManager />
           </TabsContent>
 
           {/* TEMPLATES */}
-          <TabsContent value="templates" className="mt-6">
+          <TabsContent value="templates" >
             <TemplatesManager isAdmin={isAdmin} />
           </TabsContent>
 
           {/* USUÁRIOS */}
-          <TabsContent value="flows" className="mt-6">
+          <TabsContent value="flows" >
             <FlowPresetsManager isAdmin={isAdmin} />
           </TabsContent>
 
-          <TabsContent value="users" className="mt-6">
+          <TabsContent value="users" >
             <UsersManagement isAdmin={isAdmin} />
           </TabsContent>
 
           {/* AGÊNCIA */}
-          <TabsContent value="agency" className="mt-6">
+          <TabsContent value="agency" >
             <Card>
               <CardHeader>
                 <CardTitle>Dados da agência</CardTitle>
@@ -342,7 +383,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* PAGAMENTOS */}
-          <TabsContent value="payments" className="mt-6 space-y-6">
+          <TabsContent value="payments" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Asaas — contas de cobrança (2 CNPJs)</CardTitle>
@@ -461,7 +502,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* WHATSAPP */}
-          <TabsContent value="whatsapp" className="mt-6">
+          <TabsContent value="whatsapp" >
             <Card>
               <CardHeader>
                 <CardTitle>Modelo de mensagem WhatsApp</CardTitle>
@@ -495,7 +536,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* PADRÕES */}
-          <TabsContent value="defaults" className="mt-6">
+          <TabsContent value="defaults" >
             <Card>
               <CardHeader>
                 <CardTitle>Padrões operacionais</CardTitle>
@@ -597,7 +638,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* PERFIL */}
-          <TabsContent value="profile" className="mt-6">
+          <TabsContent value="profile" >
             <Card>
               <CardHeader>
                 <CardTitle>Meu perfil</CardTitle>
@@ -652,6 +693,7 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+          </div>
         </Tabs>
       </div>
     </AppLayout>
