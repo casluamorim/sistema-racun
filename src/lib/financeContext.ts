@@ -49,7 +49,13 @@ export async function buildFinanceContext(monthsBack = 12, monthsAhead = 6) {
   );
 
   const months = new Map<string, MonthAgg>();
-  const agg = (k: string) => { if (!months.has(k)) months.set(k, emptyAgg()); return months.get(k)!; };
+   const agg = (k: string) => {
+     const existing = months.get(k);
+     if (existing) return existing;
+     const created = emptyAgg();
+     months.set(k, created);
+     return created;
+   };
   const byClient = new Map<string, Map<string, number>>();
   const byCategory = new Map<string, Map<string, number>>();
   const items: any[] = [];
@@ -61,7 +67,7 @@ export async function buildFinanceContext(monthsBack = 12, monthsAhead = 6) {
     const i = o.item; const a = agg(o.competence);
     const amt = Number(i.amount) || 0;
     const tax = taxAmount(amt, i.tax_percent);
-    const cst = o.virtual ? 0 : costByInvoice.get(i.id) ?? 0;
+    const cst = costByInvoice.get(i.id) ?? 0;
     a.pj_bruto += amt; a.pj_imposto += tax; a.pj_custos_fatura += cst;
     if (o.status === 'paid') a.pj_recebido += amt;
     const cn = clientName.get(i.client_id) ?? 'Sem cliente';
@@ -74,8 +80,11 @@ export async function buildFinanceContext(monthsBack = 12, monthsAhead = 6) {
     const amt = Number(e.amount) || 0;
     const pf = e.financial_type === 'pf';
     if (pf) { a.pf_despesas += amt; if (o.status === 'paid') a.pf_despesas_pagas += amt; }
-    else if (e.invoice_cost_id) { a.pj_custos_a_pagar += o.status === 'paid' ? 0 : amt; }
-    else { a.pj_despesas += amt; if (o.status === 'paid') a.pj_despesas_pagas += amt; }
+    else {
+      a.pj_despesas += amt;
+      if (o.status === 'paid') a.pj_despesas_pagas += amt;
+      if (e.invoice_cost_id && o.status !== 'paid') a.pj_custos_a_pagar += amt;
+    }
     const ck = `${pf ? 'PF' : 'PJ'} · ${e.category || 'Sem categoria'}`;
     const m = byCategory.get(o.competence) ?? new Map(); m.set(ck, (m.get(ck) ?? 0) + amt); byCategory.set(o.competence, m);
     if (inDetail(o.competence)) items.push({ tipo: pf ? 'despesa_pf' : 'despesa_pj', mes: o.competence, venc: o.occurrence_date, descricao: e.description, categoria: e.category, valor: amt, status: o.status, vinculada_a_receita: !!(e.linked_invoice_id || e.linked_income_id), custo_de_fatura: !!e.invoice_cost_id });
@@ -95,7 +104,7 @@ export async function buildFinanceContext(monthsBack = 12, monthsAhead = 6) {
     const top = (m?: Map<string, number>) => Array.from(m?.entries() ?? []).sort((x, y) => y[1] - x[1]).slice(0, 6).map(([n, v]) => ({ nome: n, valor: r2(v) }));
     return {
       mes,
-      pj: { faturamento_bruto: r2(a.pj_bruto), impostos: r2(a.pj_imposto), custos_das_faturas: r2(a.pj_custos_fatura), receita_liquida: r2(pj_liquido), recebido: r2(a.pj_recebido), despesas: r2(a.pj_despesas), despesas_pagas: r2(a.pj_despesas_pagas), lucro_liquido: r2(pj_liquido - a.pj_despesas) },
+      pj: { faturamento_bruto: r2(a.pj_bruto), impostos: r2(a.pj_imposto), custos_das_faturas: r2(a.pj_custos_fatura), receita_liquida: r2(pj_liquido), recebido: r2(a.pj_recebido), despesas: r2(a.pj_despesas), despesas_pagas: r2(a.pj_despesas_pagas), despesas_a_pagar: r2(a.pj_despesas - a.pj_despesas_pagas), custos_fatura_a_pagar: r2(a.pj_custos_a_pagar), lucro_liquido: r2(a.pj_bruto - a.pj_imposto - a.pj_despesas) },
       pf: { receitas: r2(a.pf_receitas), impostos: r2(a.pf_imposto), receita_liquida: r2(pf_liquido), recebido: r2(a.pf_recebido), despesas: r2(a.pf_despesas), despesas_pagas: r2(a.pf_despesas_pagas), saldo_liquido: r2(pf_liquido - a.pf_despesas) },
       top_clientes_pj: top(byClient.get(mes)),
       top_categorias_despesa: top(byCategory.get(mes)),
@@ -105,7 +114,7 @@ export async function buildFinanceContext(monthsBack = 12, monthsAhead = 6) {
   return {
     hoje: now.toISOString().slice(0, 10),
     periodo: { de: monthKey(start), ate: monthKey(end) },
-    regras: 'Recorrências projetadas mês a mês; faturas canceladas excluídas; compras do cartão contam só pela fatura do cartão; receita líquida PJ = bruto − imposto − custos lançados na fatura; despesas vinculadas a uma receita já estão em "despesas" (não descontar de novo).',
+    regras: 'Recorrências e seus custos projetados mês a mês; faturas canceladas excluídas; compras do cartão contam só pela fatura do cartão; receita líquida PJ = bruto − imposto − custos lançados na fatura. Despesas PJ incluem TODOS os custos espelhados das faturas e despesas vinculadas. Lucro líquido PJ = bruto − imposto − despesas totais (NÃO subtrair custos das faturas novamente). Saldo líquido PF = receitas − impostos − despesas PF.',
     resumo_mensal,
     lancamentos_detalhados: items.slice(0, 400),
   };
