@@ -96,7 +96,7 @@ export default function FinanceAssistant() {
             {!threads.length && <p className="p-2 text-xs text-muted-foreground">Nenhuma conversa ainda.</p>}
           </div>
         </aside>
-        <section className="flex min-w-0 flex-1 flex-col rounded-lg border border-border bg-card">
+        <section className="flex min-w-0 flex-1 flex-col rounded-lg border border-border bg-card text-card-foreground">
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <img src={logo} alt="" width={32} height={32} className="h-8 w-8 rounded-md bg-foreground/5 p-0.5" />
             <div className="min-w-0 flex-1">
@@ -139,7 +139,7 @@ function ChatInner({ threadId, initial, input, setInput, ctxRef, onActivity }: {
       return { Authorization: `Bearer ${data.session?.access_token ?? ''}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY };
     },
     body: async () => {
-      if (!ctxRef.current) ctxRef.current = await buildFinanceContext();
+      ctxRef.current = await buildFinanceContext();
       return { threadId, financeContext: ctxRef.current };
     },
   }), [threadId, ctxRef]);
@@ -229,7 +229,7 @@ function ChatInner({ threadId, initial, input, setInput, ctxRef, onActivity }: {
       </Conversation>
       <div className="border-t border-border p-3">
         <PromptInput onSubmit={({ text }) => send(text)}>
-          <PromptInputTextarea ref={textareaRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ex.: compare o lucro líquido do último trimestre com o anterior" />
+          <PromptInputTextarea ref={textareaRef} className="text-foreground caret-foreground placeholder:text-muted-foreground" aria-label="Pergunta ao assistente" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ex.: compare o lucro líquido do último trimestre com o anterior" />
           <PromptInputFooter className="justify-end">
             <PromptInputSubmit status={status} onStop={stop} disabled={!busy && !input.trim()} />
           </PromptInputFooter>
