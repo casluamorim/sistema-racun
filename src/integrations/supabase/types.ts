@@ -1501,6 +1501,7 @@ export type Database = {
           id: string
           is_monthly: boolean
           name: string
+          next_cycle_project_id: string | null
           payment_amount: number | null
           payment_pending: boolean
           payment_trigger: string | null
@@ -1521,6 +1522,7 @@ export type Database = {
           id?: string
           is_monthly?: boolean
           name: string
+          next_cycle_project_id?: string | null
           payment_amount?: number | null
           payment_pending?: boolean
           payment_trigger?: string | null
@@ -1541,6 +1543,7 @@ export type Database = {
           id?: string
           is_monthly?: boolean
           name?: string
+          next_cycle_project_id?: string | null
           payment_amount?: number | null
           payment_pending?: boolean
           payment_trigger?: string | null
@@ -1806,6 +1809,7 @@ export type Database = {
         Args: { _accepted_by: string; _token: string }
         Returns: undefined
       }
+      roll_monthly_projects: { Args: never; Returns: number }
       slugify: { Args: { _input: string }; Returns: string }
     }
     Enums: {
