@@ -63,6 +63,8 @@ export default function Projects() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
+    // Cria automaticamente o ciclo do mês seguinte dos projetos mensais
+    await (supabase.rpc as any)('roll_monthly_projects').then(() => {}, () => {});
     const [p, c] = await Promise.all([
       supabase.from('projects').select('*, clients(name)').order('created_at', { ascending: false }),
       supabase.from('clients').select('*').eq('status', 'active').order('name'),
